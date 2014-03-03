@@ -63,7 +63,7 @@ pushd /tmp > /dev/null
 ### PREREQ SOFTWARE
 
 echo Installing Node.js...
-wget https://raw.github.com/isaacs/nave/master/nave.sh > /tmp/naveNode.log 2>&1
+wget --no-check-certificate https://raw.github.com/isaacs/nave/master/nave.sh > /tmp/naveNode.log 2>&1
 chmod +x nave.sh
 sudo ./nave.sh usemain 0.10.10  > /tmp/naveNodeUseMain.log 2>&1
 # ./nave.sh install 0.10.10
