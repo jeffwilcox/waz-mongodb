@@ -79,7 +79,7 @@ echo Installing Windows Azure Node.js module...
 npm install azure  > /tmp/nodeInstall.log 2>&1
 
 echo Installing Windows Azure storage utility...
-wget https://raw.github.com/jeffwilcox/waz-updown/master/updown.js > /tmp/updownInstall.log 2>&1
+wget --no-check-certificate https://raw.github.com/jeffwilcox/waz-updown/master/updown.js > /tmp/updownInstall.log 2>&1
 
 
 
