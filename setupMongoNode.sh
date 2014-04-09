@@ -65,18 +65,18 @@ pushd /tmp > /dev/null
 echo Installing Node.js...
 wget --no-check-certificate https://raw.github.com/isaacs/nave/master/nave.sh > /tmp/naveNode.log 2>&1
 chmod +x nave.sh
-sudo ./nave.sh usemain 0.10.10  > /tmp/naveNodeUseMain.log 2>&1
-# ./nave.sh install 0.10.10
-# ./nave.sh use 0.10.10
+sudo ./nave.sh usemain 0.10.26  > /tmp/naveNodeUseMain.log 2>&1
+# ./nave.sh install 0.10.26
+# ./nave.sh use 0.10.26
 
 nodeInstalled=$(node -v)
-if [ "$nodeInstalled" != "v0.10.10" ]; then
+if [ "$nodeInstalled" != "v0.10.26" ]; then
         echo Node.js could not be installed.
         exit 1
 fi
 
 echo Installing Windows Azure Node.js module...
-npm install azure  > /tmp/nodeInstall.log 2>&1
+npm install azure@0.8.1  > /tmp/nodeInstall.log 2>&1
 
 echo Installing Windows Azure storage utility...
 wget --no-check-certificate https://raw.github.com/jeffwilcox/waz-updown/master/updown.js > /tmp/updownInstall.log 2>&1
@@ -85,20 +85,17 @@ wget --no-check-certificate https://raw.github.com/jeffwilcox/waz-updown/master/
 
 ### MONGODB
 
-echo Adding 10gen MongoDB repos to the system...
-cat > ./10gen.repo << "YUM10GEN"
-[10gen]
-name=10gen Repository
-baseurl=http://downloads-distro.mongodb.org/repo/redhat/os/x86_64
+echo Adding MongoDB repos to the system...
+cat > ./mongodb.repo << "YUM10GEN"
+[mongodb]
+name=MongoDB Repository
+baseurl=http://downloads-distro.mongodb.org/repo/redhat/os/x86_64/
 gpgcheck=0
 enabled=1
 YUM10GEN
  
-sudo mv 10gen.repo /etc/yum.repos.d/
- 
-sudo yum update -y > /tmp/updatingRepos.log
-sudo yum install -y mongo-10gen mongo-10gen-server > /tmp/installingMongo.log
-
+sudo mv mongodb.repo /etc/yum.repos.d/
+sudo yum install -y mongodb-org > /tmp/installingMongo.log
 
 
 ### AZURE STORAGE CONFIG
@@ -167,10 +164,16 @@ primaryHostname=$(hostname)
 
 ### CONFIGURATION
 
-read -p "What is the name of the replicaset? (Recommended: rs0) " replicaSetName
+read -p "What is the name of the replica set? (Recommended: rs0) " replicaSetName
 
 if [ -z "$replicaSetName" ]; then
 	replicaSetName=rs0
+fi
+
+read -p "What is the mongod instance port? (Default: 27017) " mongodPort
+
+if [ -z "mongodPort" ]; then
+	mongodPort=27017
 fi
 
 replicaSetKey=$replicaSetName.key
@@ -311,6 +314,7 @@ fork=true
 dbpath=$mongoDataPath/db
 directoryperdb=true
 replSet=$replicaSetName
+port=$mongodPort
 auth=true
 rest=true
 pidfilepath = /var/run/mongodb/mongod.pid
@@ -349,7 +353,7 @@ if $isPrimary; then
 	sleep 2
 
 	cat <<EOF > /tmp/initializeReplicaSetPrimary.js
-rsconfig = {_id: "$replicaSetName",members:[{_id:0,host:"$primaryHostname"}]}
+rsconfig = {_id: "$replicaSetName",members:[{_id:0,host:"$primaryHostname:$mongodPort"}]}
 rs.initiate(rsconfig);
 rs.conf();
 EOF
@@ -361,17 +365,15 @@ EOF
 	echo Creating cluster administrator account...
 	cat <<EOF > /tmp/initializeAuthentication.js
 db = db.getSiblingDB('admin');
-db.addUser({
-user:'clusteradmin',
-pwd:'$primaryPasscode',
-roles:[
-'userAdminAnyDatabase',
-'clusterAdmin'
-],
-otherDBRoles: {
-	config: ['readWrite'],
-	local: ['read']
-}
+db.createUser({
+  user: 'clusteradmin',
+  pwd: '$primaryPasscode',
+  roles: [
+    'userAdminAnyDatabase',
+    'clusterAdmin',
+    { db: 'config', role: 'readWrite' },
+    { db: 'local', role: 'read' }
+  ]
 });
 EOF
 
@@ -407,7 +409,7 @@ else
 
 	if $isArbiter; then
 		cat <<EOF > /tmp/joinCluster.js
-rs.addArb('$ourHostname');
+rs.addArb('$ourHostname:$mongodPort');
 rs.conf();
 rs.status();
 EOF
@@ -415,7 +417,7 @@ EOF
 	else
 
 		cat <<EOF > /tmp/joinCluster.js
-rs.add('$ourHostname');
+rs.add('$ourHostname:$mongodPort');
 rs.conf();
 rs.status();
 EOF
