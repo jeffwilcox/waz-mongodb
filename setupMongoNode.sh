@@ -51,7 +51,7 @@
 
 
 echo Specialized MongoDB on Windows Azure configuration script
-echo by Jeff Wilcox
+echo by Jeff Wilcox and contributors
 echo
 
 
@@ -172,7 +172,7 @@ fi
 
 read -p "What is the mongod instance port? (Default: 27017) " mongodPort
 
-if [ -z "mongodPort" ]; then
+if [ -z "$mongodPort" ]; then
 	mongodPort=27017
 fi
 
@@ -316,7 +316,6 @@ directoryperdb=true
 replSet=$replicaSetName
 port=$mongodPort
 auth=true
-rest=true
 pidfilepath = /var/run/mongodb/mongod.pid
 keyFile=/etc/$replicaSetKey
 EOF
