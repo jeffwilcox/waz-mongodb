@@ -306,18 +306,29 @@ sudo mkdir $mongoDataPath/log
 sudo mkdir $mongoDataPath/db
 sudo chown -R mongod:mongod $mongoDataPath
 
-echo Configuring MongoDB...
+# FYI: YAML syntax introduced in MongoDB 2.6
+echo Configuring MongoDB 2.6...
 sudo tee /etc/mongod.conf > /dev/null <<EOF
-logpath=$mongoDataPath/log/mongod.log
-logappend=true
-fork=true
-dbpath=$mongoDataPath/db
-directoryperdb=true
-replSet=$replicaSetName
-port=$mongodPort
-auth=true
-pidfilepath = /var/run/mongodb/mongod.pid
-keyFile=/etc/$replicaSetKey
+systemLog:
+    destination: file
+    path: "/var/log/mongodb/mongod.log"
+    quiet: true
+    logAppend: true
+processManagement:
+    fork: true
+    pidFilePath: "/var/run/mongodb/mongod.pid"
+net:
+    port: $mongodPort
+security:
+    keyFile: "/etc/$replicaSetKey"
+    authorization: "enabled"
+storage:
+    dbPath: "$mongoDataPath/db"
+    directoryPerDB: true
+    journal:
+        enabled: true
+replication:
+    replSetName: "$replicaSetName"
 EOF
 
 if $isPrimary; then
