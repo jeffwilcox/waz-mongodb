@@ -1,7 +1,7 @@
 waz-mongodb
 ===========
 
-An unofficial set of Bash scripts to build out a simple MongoDB replica set, designed for Windows Azure Linux compute VMs.
+An unofficial set of Bash scripts to build out a simple MongoDB replica set, designed for Microsoft Azure Linux compute VMs.
 
 Created for [this blog post by Jeff Wilcox](http://www.jeff.wilcox.name/2013/09/mongodb-azure-linux/).
 
