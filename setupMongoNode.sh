@@ -19,9 +19,9 @@
 #
 # setupMongoNode.sh : MongoDB Node Configuration Script by Jeff Wilcox
 #
-# Target Image: OpenLogic CentOS, Windows Azure IaaS VM
+# Target Image: OpenLogic CentOS, Azure IaaS VM
 #
-# A specialized script specific to Windows Azure for configuring a 
+# A specialized script specific to Microsoft Azure for configuring a 
 # MongoDB cluster (without sharding, and without anything fancy 
 # like RAID disks).
 #
@@ -29,10 +29,10 @@
 # arbiter.
 #
 # Optionally supports prepping, mounting and storing MongoDB data on
-# an attached empty Windows Azure disk. This is recommended as you
+# an attached empty Microsoft Azure disk. This is recommended as you
 # should get additional dedicated IOPS for that extra disk.
 #
-# Per the available Windows Azure performance whitepapers, it is not
+# Per the available Azure performance whitepapers, it is not
 # recommended to use RAID configurations for increasing IOPS or 
 # availability. This differs some from the standard guidance for
 # using MongoDB on some other cloud providers based in the Seattle
@@ -50,7 +50,7 @@
 
 
 
-echo Specialized MongoDB on Windows Azure configuration script
+echo Specialized MongoDB on Microsoft Azure configuration script
 echo by Jeff Wilcox and contributors
 echo
 
@@ -75,10 +75,10 @@ if [ "$nodeInstalled" != "v0.10.26" ]; then
         exit 1
 fi
 
-echo Installing Windows Azure Node.js module...
+echo Installing Azure Node.js module...
 npm install azure@0.8.1  > /tmp/nodeInstall.log 2>&1
 
-echo Installing Windows Azure storage utility...
+echo Installing Azure storage utility...
 wget --no-check-certificate https://raw.github.com/jeffwilcox/waz-updown/master/updown.js > /tmp/updownInstall.log 2>&1
 
 
@@ -101,7 +101,7 @@ sudo yum install -y mongodb-org > /tmp/installingMongo.log
 ### AZURE STORAGE CONFIG
 
 if [ -z "$AZURE_STORAGE_ACCOUNT" ]; then
-	read -p "Windows Azure storage account name? " storageAccount
+	read -p "Azure storage account name? " storageAccount
 	export AZURE_STORAGE_ACCOUNT=$storageAccount
 	echo
 fi
@@ -271,7 +271,7 @@ if $isUsingDataDisk; then
 
 	mongoDataPath=/mnt/data
 
-	echo Checking for attached Windows Azure data disk...
+	echo Checking for attached Azure data disk...
 	while [ ! -e /dev/sdc ]; do echo waiting for /dev/sdc empty disk to attach; sleep 20; done
 
 	echo Partitioning...
@@ -334,7 +334,7 @@ EOF
 if $isPrimary; then
 	echo Generating replica set security key...
 	openssl rand -base64 753 > $replicaSetKey
-	echo Securely storing replica set key in Windows Azure storage...
+	echo Securely storing replica set key in Azure storage...
 	node updown.js mongodb up $replicaSetKey
 else
 	echo Acquiring replica set security key from the cloud...
