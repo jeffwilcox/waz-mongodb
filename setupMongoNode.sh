@@ -279,7 +279,7 @@ if $isUsingDataDisk; then
 n
 p
 1
-1
+
 
 w
 ENDPARTITION
